@@ -1,28 +1,35 @@
 name: Build Space Invaders with Pygbag
+
+# trigger on pushes to main or manual dispatch
 on:
   push:
     branches:
       - main
   workflow_dispatch:
 
+# grant the exact minimum permissions needed
+permissions:
+  contents: write
+  pages: write
+
 jobs:
   build-pygbag:
-    name: Sandy Inspires - Space Invaders Game
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Checkout
-      run: |
-            echo "Attempting to install pygbag"
-            python -m pip install pygbag
-            echo "Successfully installed pygbag"
-            echo "Attempting to build the game"
-            python -m pygbag --build $GITHUB_WORKSPACE/space_invaders/main.py
-            echo "Successfully build the game and complied to WebAssembly"
+      # persist GITHUB_TOKEN so later steps can push
+      - uses: actions/checkout@v3
+        with:
+          persist-credentials: true
 
-    - name : "Upload to GitHub pages branch gh-pages"
-      uses: JamesIves/github-pages-deploy-action@4.1.7
-      with:
-        branch: gh-pages
-        folder: space_invaders/build/web
+      - name: Install pygbag & build
+        run: |
+          python -m pip install pygbag
+          python -m pygbag --build $GITHUB_WORKSPACE/space_invaders/main.py
+
+      - name: Upload to GitHub pages branch gh‑pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
+          folder: space_invaders/build/web
